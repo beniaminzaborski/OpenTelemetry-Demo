@@ -17,22 +17,6 @@ services:
     ports:
       - "9200:9200"
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: otel-grafana
-    depends_on:
-      - loki
-      - prometheus
-      - tempo
-    environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
-
   kibana:
     image: kibana:8.3.3
     container_name: otel-kibana
@@ -44,24 +28,20 @@ services:
     ports:
       - "5601:5601"
 
-  loki:
-    image: grafana/loki:latest
-    container_name: otel-loki
-    ports:
-      - "3100:3100"
-
   otel-collector:
-    image: otel/opentelemetry-collector:latest
+    image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     depends_on:
-      - loki
       - prometheus
-      - tempo
     ports:
-      - "4317:4317"   # OTLP gRPC receiver
+      - "1888:1888"   # pprof extension
       - "8888:8888"   # Prometheus metrics exposed by the collector
       - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP http receiver
+      - "55679:55679" # zpages extension
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
 
@@ -94,16 +74,6 @@ services:
     ports:
       - "6379:6379"
 
-  tempo:
-    image: grafana/tempo:latest
-    container_name: otel-tempo
-    command: [ "-config.file=/etc/tempo.yaml" ]
-    ports:
-      - "3200:3200"
-    volumes:
-      - ./tempo.yaml:/etc/tempo.yaml
-      - ./tempo-data:/tmp/tempo
-
   # Application
 
   alpha:
@@ -113,7 +83,6 @@ services:
     container_name: otel-alpha
     depends_on:
       - epsilon
-      - loki
       - mu
       - otel-collector
       - rabbitmq
@@ -133,7 +102,6 @@ services:
     container_name: otel-epsilon
     depends_on:
       - elasticsearch
-      - loki
       - otel-collector
     image: otel-epsilon
     environment:
@@ -150,7 +118,6 @@ services:
       dockerfile: ./Mu/Dockerfile
     container_name: otel-mu
     depends_on:
-      - loki
       - otel-collector
       - rabbitmq
     image: otel-mu
@@ -167,7 +134,8 @@ services:
       context: .
       dockerfile: ./Omicron/Dockerfile
     container_name: otel-omicron
-    # depends_on
+    depends_on:
+      - otel-collector
     image: otel-omicron
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -183,7 +151,6 @@ services:
       dockerfile: ./Sigma/Dockerfile
     container_name: otel-sigma
     depends_on:
-      - loki
       - otel-collector
       - postgres
       - redis

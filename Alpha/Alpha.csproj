@@ -15,7 +15,9 @@
 
     <ItemGroup>
       <PackageReference Include="MassTransit.RabbitMQ" Version="$(MassTransitVersion)" />
+	  <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.1" />
       <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="$(OtelRcVersion)" />
+	  <PackageReference Include="OpenTelemetry.Exporter.Console" Version="$(OtelAlphaVersion)" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
     </ItemGroup>
 

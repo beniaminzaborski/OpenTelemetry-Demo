@@ -13,8 +13,6 @@ const string indexName = "epsilon";
 var builder = WebApplication.CreateBuilder(args);
 var (_, services, configuration, _, _, _) = builder;
 
-builder.UseSerilog();
-
 services.AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
     {

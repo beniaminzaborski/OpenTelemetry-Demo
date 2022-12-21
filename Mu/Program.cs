@@ -15,8 +15,6 @@ const string serviceVersion = "1.0.0";
 var builder = WebApplication.CreateBuilder(args);
 var (_, services, configuration, _, _, _) = builder;
 
-builder.UseSerilog();
-
 services.AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
     {

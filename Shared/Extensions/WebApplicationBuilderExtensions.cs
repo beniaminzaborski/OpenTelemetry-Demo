@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
@@ -25,12 +23,5 @@ public static class WebApplicationBuilderExtensions
         logging = builder.Logging;
         webHost = builder.WebHost;
         host = builder.Host;
-    }
-
-    public static void UseSerilog(this WebApplicationBuilder builder)
-    {
-        builder.Host
-            .ConfigureLogging(loggingBuilder => loggingBuilder.ClearProviders())
-            .UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
     }
 }

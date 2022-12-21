@@ -1,35 +1,65 @@
 receivers:
   otlp:
     protocols:
+      http:
       grpc:
-
-exporters:
-
-  logging:
-    loglevel: debug
-
-  otlp:
-    endpoint: "otel-tempo:4317"
-    tls:
-      insecure: true
-
+  # The hostmetrics receiver is required to get correct infrastructure metrics in Datadog.
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      paging:
+        metrics:
+          system.paging.utilization:
+            enabled: true
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      disk:
+      filesystem:
+        metrics:
+          system.filesystem.utilization:
+            enabled: true
+      load:
+      memory:
+      network:
+      processes:
+  # The prometheus receiver scrapes metrics needed for the OpenTelemetry Collector Dashboard.
   prometheus:
-    endpoint: "0.0.0.0:8889"
+    config:
+      scrape_configs:
+      - job_name: 'otelcol'
+        scrape_interval: 10s
+        static_configs:
+        - targets: ['0.0.0.0:8888']
 
 processors:
   batch:
+    # Datadog APM Intake limit is 3.2MB. Let's make sure the batches do not
+    # go over that.
+    send_batch_max_size: 1000
+    send_batch_size: 100
+    timeout: 10s
+
+exporters:
+  logging:
+    loglevel: debug
+  datadog:
+    api:
+      site: <DD_SITE>
+      key: ${DD_API_KEY}
 
 service:
   pipelines:
-    traces:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ logging, otlp ]
     metrics:
-      receivers: [ otlp ]
-      processors: [ batch ]
-      exporters: [ logging, prometheus ]
-    # logs:
-    #  receivers: [otlp]
-    #  processors: []
-    #  exporters: [logging, file]
+      receivers: [hostmetrics, otlp]
+      processors: [batch]
+      exporters: [logging, datadog]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, datadog]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, datadog]

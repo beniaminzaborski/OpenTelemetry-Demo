@@ -18,8 +18,6 @@ const string serviceVersion = "1.0.0";
 var builder = WebApplication.CreateBuilder(args);
 var (_, services, configuration, _, _, _) = builder;
 
-builder.UseSerilog();
-
 var connectionString = configuration.GetConnectionString(serviceName);
 
 services.AddDbContext<SigmaContext>(options => options.UseNpgsql(connectionString));

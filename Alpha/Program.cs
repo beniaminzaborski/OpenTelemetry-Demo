@@ -3,6 +3,7 @@ using Epsilon.Client;
 using MassTransit;
 using Microsoft.Extensions.Options;
 using Mu.Client;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -15,8 +16,6 @@ const string serviceVersion = "1.0.0";
 
 var builder = WebApplication.CreateBuilder(args);
 var (_, services, configuration, _, _, _) = builder;
-
-builder.UseSerilog();
 
 services.AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
@@ -88,8 +87,22 @@ app.UseForwardedPathBase();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddOpenTelemetry(options =>
+    {
+        options
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName, serviceVersion: serviceVersion))
+            .AddConsoleExporter()
+            .AddOtlpExporter();
+    });
+});
+
 app.MapGet("/aggregate", async (IEpsilonClient epsilonClient, IMuClient muClient) =>
     {
+        var logger = loggerFactory.CreateLogger<Program>();
+        logger.LogInformation("Begin aggregate");
+
         var foo = await epsilonClient.GetFoo();
         var bar = await muClient.GetBar();
 
@@ -100,6 +113,8 @@ app.MapGet("/aggregate", async (IEpsilonClient epsilonClient, IMuClient muClient
             BarId = bar.Id,
             BarCost = bar.Cost
         };
+
+        logger.LogInformation("End aggregate");
 
         return Results.Ok(aggregate);
     })

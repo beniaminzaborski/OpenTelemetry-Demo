@@ -1,8 +1,5 @@
 # .NET OpenTelemetry Demo
 
-[![Made in Ukraine](https://img.shields.io/badge/made_in-ukraine-ffd700.svg?labelColor=0057b7)](https://stand-with-ukraine.pp.ua/)
-[![Build status](https://github.com/mishamyte/OpenTelemetry-Demo/workflows/CI/badge.svg)](https://github.com/mishamyte/OpenTelemetry-Demo/actions?query=workflow%3ACI)
-
 ## Terms of use
 
 By using this project or its source code, for any purpose and in any shape or form, you grant your **implicit agreement** to all the following statements:
@@ -29,13 +26,8 @@ Glory to Ukraine! 🇺🇦
 
 ## Project description
 
-This project contains example of using OpenTelemetry with .NET web applications. It uses [OTEL Collector](https://opentelemetry.io/docs/collector/) and [Grafana OSS](https://grafana.com/oss/) backend for dealing with data.
-
-It consists of:
-- [Grafana](https://grafana.com/oss/grafana/)
-- [Loki](https://grafana.com/oss/loki/) (using [Serilog.Sinks.Grafana.Loki](https://github.com/serilog-contrib/serilog-sinks-grafana-loki) as a sink for projects)
-- [Prometheus](https://grafana.com/oss/prometheus/)
-- [Tempo](https://grafana.com/oss/tempo/)
+This is fork of original [.NET OpenTelemetry Demo repo](https://github.com/mishamyte/OpenTelemetry-Demo).
+This project contains example of using OpenTelemetry with .NET web applications. It uses [OTEL Collector](https://opentelemetry.io/docs/collector/) and [DataDog](https://www.datadoghq.com/) backend for dealing with traces, metrics and logs.
 
 Solution consists of multiple services that use common infrastructure building blocks:
 - [Elasticsearch](https://www.elastic.co/) and [Kibana](https://www.elastic.co/kibana/)
@@ -48,6 +40,8 @@ Solution consists of multiple services that use common infrastructure building b
 ![Architecture diagram](./docs/architecture-diagram.png)
 
 ## How to run?
+
+Put your DataDog API key and site in otel-collector-config.yaml before run.
 
 You could run solution fully in containers, using
 
@@ -97,9 +91,9 @@ Exposes 3 endpoints:
 - _Creating entity_. Entity is created in SQL with EF Core.
 
 ## Data flows
-- _Logs_. Are passed directly to Loki, using corresponding Serilog's sink.
-- _Metrics_. Are exported to OTEL and scrapped by Prometheus from it.
-- _Traces_. Are exported to OTEL and passed to Tempo by OTEL.
+- _Logs_. Are exported to OTEL and passed to DataDog backend with DataDog exporter in OTEL collector.
+- _Metrics_. Are exported to OTEL and passed to DataDog backend with DataDog exporter in OTEL collector.
+- _Traces_. Are exported to OTEL and passed to DataDog backend with DataDog exporter in OTEL collector.
 
 ## Contributing
 

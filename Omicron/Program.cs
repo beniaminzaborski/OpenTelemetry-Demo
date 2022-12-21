@@ -1,5 +1,6 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -9,8 +10,6 @@ const string serviceVersion = "1.0.0";
 
 var builder = WebApplication.CreateBuilder(args);
 var (environment, services, configuration, _, _, _) = builder;
-
-builder.UseSerilog();
 
 builder.Configuration
     .AddJsonFile("ocelot.json", false, true)
@@ -27,6 +26,7 @@ services.AddSwaggerForOcelot(configuration);
 services.AddOpenTelemetryTracing(providerBuilder =>
 {
     providerBuilder
+        .AddConsoleExporter()
         .AddSource(serviceName)
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName, serviceVersion: serviceVersion))
         .AddAspNetCoreInstrumentation()
@@ -38,6 +38,7 @@ services.AddOpenTelemetryMetrics(
     providerBuilder =>
     {
         providerBuilder
+            .AddConsoleExporter()
             .AddMeter(serviceName)
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName, serviceVersion: serviceVersion))
             .AddAspNetCoreInstrumentation()
