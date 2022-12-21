@@ -1,6 +1,5 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -9,7 +8,7 @@ const string serviceName = "Omicron";
 const string serviceVersion = "1.0.0";
 
 var builder = WebApplication.CreateBuilder(args);
-var (environment, services, configuration, _, _, _) = builder;
+var (environment, services, configuration, loggingBuilder, _, _) = builder;
 
 builder.Configuration
     .AddJsonFile("ocelot.json", false, true)
@@ -44,8 +43,10 @@ services.AddOpenTelemetryMetrics(
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
-            .AddOtlpExporter();
+        .AddOtlpExporter();
     });
+
+loggingBuilder.AddLogsExportWithOpenTelemetry(serviceName, serviceVersion);
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
 using System.Reflection;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -16,7 +17,7 @@ const string serviceName = "Sigma";
 const string serviceVersion = "1.0.0";
 
 var builder = WebApplication.CreateBuilder(args);
-var (_, services, configuration, _, _, _) = builder;
+var (_, services, configuration, loggingBuilder, _, _) = builder;
 
 var connectionString = configuration.GetConnectionString(serviceName);
 
@@ -63,8 +64,10 @@ services.AddOpenTelemetryMetrics(
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName, serviceVersion: serviceVersion))
             .AddAspNetCoreInstrumentation()
             .AddRuntimeInstrumentation()
-            .AddOtlpExporter();
+        .AddOtlpExporter();
     });
+
+loggingBuilder.AddLogsExportWithOpenTelemetry(serviceName, serviceVersion);
 
 var app = builder.Build();
 

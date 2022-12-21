@@ -13,7 +13,7 @@ const string serviceName = "Mu";
 const string serviceVersion = "1.0.0";
 
 var builder = WebApplication.CreateBuilder(args);
-var (_, services, configuration, _, _, _) = builder;
+var (_, services, configuration, loggingBuilder, _, _) = builder;
 
 services.AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
@@ -71,6 +71,8 @@ services.AddOpenTelemetryMetrics(
             .AddRuntimeInstrumentation()
             .AddOtlpExporter();
     });
+
+loggingBuilder.AddLogsExportWithOpenTelemetry(serviceName, serviceVersion);
 
 var app = builder.Build();
 

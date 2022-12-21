@@ -11,7 +11,7 @@ const string serviceVersion = "1.0.0";
 const string indexName = "epsilon";
 
 var builder = WebApplication.CreateBuilder(args);
-var (_, services, configuration, _, _, _) = builder;
+var (_, services, configuration, loggingBuilder, _, _) = builder;
 
 services.AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
@@ -44,8 +44,10 @@ services.AddOpenTelemetryMetrics(
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName, serviceVersion: serviceVersion))
             .AddAspNetCoreInstrumentation()
             .AddRuntimeInstrumentation()
-            .AddOtlpExporter();
+        .AddOtlpExporter();
     });
+
+loggingBuilder.AddLogsExportWithOpenTelemetry(serviceName, serviceVersion);
 
 var app = builder.Build();
 

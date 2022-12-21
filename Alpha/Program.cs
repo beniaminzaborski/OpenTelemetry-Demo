@@ -15,7 +15,7 @@ const string serviceName = "Alpha";
 const string serviceVersion = "1.0.0";
 
 var builder = WebApplication.CreateBuilder(args);
-var (_, services, configuration, _, _, _) = builder;
+var (_, services, configuration, loggingBuilder, _, _) = builder;
 
 services.AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
@@ -80,6 +80,8 @@ services.AddOpenTelemetryMetrics(
             .AddOtlpExporter();
     });
 
+loggingBuilder.AddLogsExportWithOpenTelemetry(serviceName, serviceVersion);
+
 var app = builder.Build();
 
 app.UseForwardedPathBase();
@@ -87,20 +89,8 @@ app.UseForwardedPathBase();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-var loggerFactory = LoggerFactory.Create(builder =>
-{
-    builder.AddOpenTelemetry(options =>
+app.MapGet("/aggregate", async (IEpsilonClient epsilonClient, IMuClient muClient, ILogger<Program> logger) =>
     {
-        options
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName, serviceVersion: serviceVersion))
-            .AddConsoleExporter()
-            .AddOtlpExporter();
-    });
-});
-
-app.MapGet("/aggregate", async (IEpsilonClient epsilonClient, IMuClient muClient) =>
-    {
-        var logger = loggerFactory.CreateLogger<Program>();
         logger.LogInformation("Begin aggregate");
 
         var foo = await epsilonClient.GetFoo();
