@@ -28,22 +28,26 @@ services:
     ports:
       - "5601:5601"
 
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: otel-collector
-    command: [ "--config=/etc/otel-collector-config.yaml" ]
-    depends_on:
-      - prometheus
+  datadog-agent:
+    image: datadog/agent:latest
+    container_name: datadog-agent
+    pid: host
+    environment:
+      DD_SITE: <DD_SITE>
+      DD_API_KEY: ${DD_API_KEY}
+      DD_LOGS_ENABLED: true
+      # DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: true
+      # DD_CONTAINER_EXCLUDE: "name:datadog-agent"
+      DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT: 0.0.0.0:4317
+      DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT: 0.0.0.0:4318
     ports:
-      - "1888:1888"   # pprof extension
-      - "8888:8888"   # Prometheus metrics exposed by the collector
-      - "8889:8889"   # Prometheus exporter metrics
-      - "13133:13133" # health_check extension
       - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP http receiver
-      - "55679:55679" # zpages extension
+      - "4318:4318"   # OTLP http receiver    
     volumes:
-      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
   postgres:
     image: postgres
@@ -84,13 +88,13 @@ services:
     depends_on:
       - epsilon
       - mu
-      - otel-collector
+      - datadog-agent
       - rabbitmq
     image: otel-alpha
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://*:80
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://datadog-agent:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     ports:
       - "5201:80"
@@ -102,12 +106,12 @@ services:
     container_name: otel-epsilon
     depends_on:
       - elasticsearch
-      - otel-collector
+      - datadog-agent
     image: otel-epsilon
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://*:80
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://datadog-agent:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     ports:
       - "5204:80"
@@ -118,13 +122,13 @@ services:
       dockerfile: ./Mu/Dockerfile
     container_name: otel-mu
     depends_on:
-      - otel-collector
+      - datadog-agent
       - rabbitmq
     image: otel-mu
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://*:80
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://datadog-agent:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     ports:
       - "5203:80"
@@ -135,12 +139,12 @@ services:
       dockerfile: ./Omicron/Dockerfile
     container_name: otel-omicron
     depends_on:
-      - otel-collector
+      - datadog-agent
     image: otel-omicron
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://*:80
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://datadog-agent:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     ports:
       - "5200:80"
@@ -151,14 +155,14 @@ services:
       dockerfile: ./Sigma/Dockerfile
     container_name: otel-sigma
     depends_on:
-      - otel-collector
+      - datadog-agent
       - postgres
       - redis
     image: otel-sigma
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://*:80
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://datadog-agent:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     ports:
       - "5202:80"

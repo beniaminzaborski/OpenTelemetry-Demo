@@ -27,7 +27,7 @@ Glory to Ukraine! 🇺🇦
 ## Project description
 
 This is fork of original [.NET OpenTelemetry Demo repo](https://github.com/mishamyte/OpenTelemetry-Demo).
-This project contains example of using OpenTelemetry with .NET web applications. It uses [OTEL Collector](https://opentelemetry.io/docs/collector/) and [DataDog](https://www.datadoghq.com/) backend for dealing with traces, metrics and logs.
+This project contains example of using OpenTelemetry with .NET web applications. It uses [Datadog Agent](https://opentelemetry.io/docs/collector/) and [Datadog](https://www.datadoghq.com/) backend for dealing with traces, metrics and logs.
 
 Solution consists of multiple services that use common infrastructure building blocks:
 - [Elasticsearch](https://www.elastic.co/) and [Kibana](https://www.elastic.co/kibana/)
@@ -41,7 +41,7 @@ Solution consists of multiple services that use common infrastructure building b
 
 ## How to run?
 
-Put your DataDog API key and site in otel-collector-config.yaml before run.
+Put your DataDog API key and site in docker-compose.yaml before run.
 
 You could run solution fully in containers, using
 
@@ -91,9 +91,9 @@ Exposes 3 endpoints:
 - _Creating entity_. Entity is created in SQL with EF Core.
 
 ## Data flows
-- _Logs_. Are exported to OTEL and passed to DataDog backend with DataDog exporter in OTEL collector.
-- _Metrics_. Are exported to OTEL and passed to DataDog backend with DataDog exporter in OTEL collector.
-- _Traces_. Are exported to OTEL and passed to DataDog backend with DataDog exporter in OTEL collector.
+- _Logs_. Are exported to OTEL but currently Datadog Agent (v7) not passing OTEL logs to Datadog backend.
+- _Metrics_. Are exported to OTEL and passed to Datadog backend through Datadog Agent.
+- _Traces_. Are exported to OTEL and passed to Datadog backend through Datadog Agent.
 
 ## Contributing
 
